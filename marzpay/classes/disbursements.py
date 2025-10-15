@@ -131,7 +131,8 @@ class DisbursementsAPI:
             else:
                 phone_number = '256' + phone_number
         
-        return phone_number
+        # Add + prefix for API
+        return '+' + phone_number
 
     def _generate_uuid(self) -> str:
         """

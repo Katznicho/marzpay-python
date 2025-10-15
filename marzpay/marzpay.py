@@ -142,6 +142,11 @@ class MarzPay:
         if headers:
             request_headers.update(headers)
 
+        # Extract content_type before spreading kwargs
+        content_type = kwargs.get('content_type', 'json')
+        if 'content_type' in kwargs:
+            del kwargs['content_type']
+        
         request_kwargs = {
             "method": method,
             "url": url,
@@ -151,8 +156,6 @@ class MarzPay:
         }
 
         if data and method.upper() in ["POST", "PUT", "PATCH"]:
-            # Check content type from kwargs
-            content_type = kwargs.get('content_type', 'json')
             
             if content_type == 'multipart':
                 # For multipart form data (like collections and disbursements)

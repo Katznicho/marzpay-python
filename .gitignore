@@ -186,3 +186,11 @@ Desktop.ini
 # Temporary files
 *.tmp
 *.temp
+
+# Test files with credentials (security)
+test_*.py
+*_test.py
+test-*.py
+.env
+.env.local
+.env.*.local
