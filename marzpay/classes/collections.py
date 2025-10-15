@@ -36,84 +36,64 @@ class CollectionsAPI:
         """Initialize CollectionsAPI with MarzPay client"""
         self.client = client
 
-    def collect_money(
-        self,
-        amount: int,
-        phone_number: str,
-        reference: str,
-        description: Optional[str] = None,
-        callback_url: Optional[str] = None,
-        country: str = "UG",
-    ) -> Dict[str, Any]:
+    def collect_money(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Collect money from a customer via mobile money
         
         Args:
-            amount: Amount in UGX (500-10,000,000)
-            phone_number: Customer's phone number
-            reference: Unique UUID4 reference for the transaction
-            description: Payment description (optional)
-            callback_url: Custom webhook URL (optional)
-            country: Country code (default: UG)
+            params: Parameters for collecting money
+                - phone_number (str): Customer phone number
+                - amount (int): Amount to collect
+                - country (str): Country code (default: UG)
+                - description (str): Payment description
+                - reference (str): Unique reference (optional, auto-generated if not provided)
+                - callback_url (str): Webhook callback URL (optional)
         
         Returns:
-            Collection result with transaction details
+            API response with transaction details
             
         Raises:
-            MarzPayError: When validation fails or API request fails
-            
-        Example:
-            ```python
-            try:
-                result = client.collections.collect_money(
-                    amount=10000,
-                    phone_number="0759983853",
-                    reference=client.collections.generate_reference(),
-                    description="Payment for services"
-                )
-                
-                print(f"Collection ID: {result['data']['collection_id']}")
-            except MarzPayError as e:
-                print(f"Error: {e.message}")
-            ```
+            MarzPayError: When request fails or validation fails
         """
-        params = {
-            "amount": amount,
-            "phone_number": phone_number,
-            "reference": reference,
-            "description": description,
-            "callback_url": callback_url,
-            "country": country,
-        }
-
         self._validate_collect_money_params(params)
 
-        # Format phone number
-        params["phone_number"] = self._format_phone_number(phone_number)
+        # Generate a valid UUID if no reference provided
+        reference = params.get('reference') or self._generate_uuid()
+        
+        payload = {
+            'amount': str(params['amount']),  # API expects string
+            'phone_number': self._format_phone_number(params['phone_number']),
+            'reference': reference,
+            'description': params.get('description', 'Payment for services'),
+            'callback_url': params.get('callback_url'),
+            'country': params.get('country', 'UG'),
+        }
 
-        return self.client.request(
-            "/collections",
-            method="POST",
-            data=params,
-        )
+        return self.client.request('/collect-money', method='POST', data=payload, content_type='multipart')
+
+    def get_collection_details(self, uuid: str) -> Dict[str, Any]:
+        """
+        Get collection details by UUID
+        
+        Args:
+            uuid: Collection UUID
+            
+        Returns:
+            API response with collection details
+        """
+        return self.client.request(f'/collect-money/{uuid}')
 
     def get_collection(self, collection_id: str) -> Dict[str, Any]:
         """
-        Get collection details by ID
+        Alias for get_collection_details for backward compatibility
         
         Args:
             collection_id: Collection ID
             
         Returns:
             Collection details
-            
-        Raises:
-            MarzPayError: When request fails
         """
-        if not collection_id:
-            raise MarzPayError.validation_error("Collection ID is required")
-
-        return self.client.request(f"/collections/{collection_id}")
+        return self.get_collection_details(collection_id)
 
     def get_collections(
         self,
@@ -161,9 +141,9 @@ class CollectionsAPI:
         Get available collection services
         
         Returns:
-            Available services
+            API response with available services
         """
-        return self.client.request("/collections/services")
+        return self.client.request('/collect-money/services')
 
     def generate_reference(self) -> str:
         """
@@ -184,53 +164,46 @@ class CollectionsAPI:
         Raises:
             MarzPayError: When validation fails
         """
-        errors = []
+        if 'phone_number' not in params:
+            raise MarzPayError("phone_number is required", "MISSING_PHONE_NUMBER", 400)
+        
+        if 'amount' not in params:
+            raise MarzPayError("amount is required", "MISSING_AMOUNT", 400)
+        
+        if not isinstance(params['amount'], (int, float)) or params['amount'] <= 0:
+            raise MarzPayError("amount must be a positive number", "INVALID_AMOUNT", 400)
 
-        # Validate amount
-        amount = params.get("amount")
-        if amount is None:
-            errors.append("Amount is required")
-        elif not isinstance(amount, int):
-            errors.append("Amount must be an integer")
-        elif amount < 500:
-            errors.append("Amount must be at least 500 UGX")
-        elif amount > 10000000:
-            errors.append("Amount must not exceed 10,000,000 UGX")
-
-        # Validate phone number
-        phone_number = params.get("phone_number")
-        if not phone_number:
-            errors.append("Phone number is required")
-
-        # Validate reference
-        reference = params.get("reference")
-        if not reference:
-            errors.append("Reference is required")
-
-        if errors:
-            raise MarzPayError.validation_error(
-                "Validation failed", {"validation_errors": errors}
-            )
+    def _generate_uuid(self) -> str:
+        """
+        Generate a valid UUID v4
+        
+        Returns:
+            UUID v4 string
+        """
+        return str(uuid.uuid4())
 
     def _format_phone_number(self, phone_number: str) -> str:
         """
-        Format phone number for API
+        Format phone number for Uganda (ensure + prefix)
         
         Args:
-            phone_number: Phone number to format
+            phone_number: Raw phone number
             
         Returns:
-            Formatted phone number
+            Formatted phone number with + prefix
         """
-        # Remove any non-digit characters
-        phone_number = re.sub(r"[^0-9]", "", phone_number)
+        # Remove any non-digit characters except +
+        phone_number = re.sub(r'[^\d+]', '', phone_number)
+        
+        # Remove + if present
+        phone_number = phone_number.replace('+', '')
         
         # Add country code if not present
-        if not phone_number.startswith("256"):
-            if phone_number.startswith("0"):
-                phone_number = "256" + phone_number[1:]
+        if not phone_number.startswith('256'):
+            if phone_number.startswith('0'):
+                phone_number = '256' + phone_number[1:]
             else:
-                phone_number = "256" + phone_number
-
-        return phone_number
+                phone_number = '256' + phone_number
+        
+        return '+' + phone_number
 

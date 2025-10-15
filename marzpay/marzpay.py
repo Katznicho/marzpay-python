@@ -136,7 +136,6 @@ class MarzPay:
         url = f"{self.config['base_url']}{endpoint}"
         
         request_headers = {
-            "Content-Type": "application/json",
             "Authorization": self.get_auth_header(),
         }
         
@@ -152,7 +151,23 @@ class MarzPay:
         }
 
         if data and method.upper() in ["POST", "PUT", "PATCH"]:
-            request_kwargs["json"] = data
+            # Check content type from kwargs
+            content_type = kwargs.get('content_type', 'json')
+            
+            if content_type == 'multipart':
+                # For multipart form data (like collections and disbursements)
+                request_kwargs["data"] = data
+                # Don't set Content-Type header, let requests handle it
+                if "Content-Type" in request_headers:
+                    del request_headers["Content-Type"]
+            elif content_type == 'form':
+                # For form data
+                request_kwargs["data"] = data
+                request_headers["Content-Type"] = "application/x-www-form-urlencoded"
+            else:
+                # Default to JSON
+                request_kwargs["json"] = data
+                request_headers["Content-Type"] = "application/json"
 
         try:
             response = self.session.request(**request_kwargs)
@@ -261,4 +276,49 @@ class MarzPay:
                 "error": e.message,
                 "code": e.code,
             }
+
+    def format_phone_number(self, phone_number: str) -> str:
+        """
+        Format phone number using utility
+        
+        Args:
+            phone_number: Raw phone number
+            
+        Returns:
+            Formatted phone number
+        """
+        return self.phone_utils.format_phone_number(phone_number)
+
+    def is_valid_phone_number(self, phone_number: str) -> bool:
+        """
+        Check if phone number is valid using utility
+        
+        Args:
+            phone_number: Phone number to validate
+            
+        Returns:
+            True if valid
+        """
+        return self.phone_utils.is_valid_uganda_phone_number(phone_number)
+
+    def generate_reference(self) -> str:
+        """
+        Generate a unique reference using utility
+        
+        Returns:
+            Unique reference string
+        """
+        return self.utils.generate_reference()
+
+    def generate_reference_with_prefix(self, prefix: str = 'MARZ') -> str:
+        """
+        Generate a unique reference with prefix using utility
+        
+        Args:
+            prefix: Prefix for reference
+            
+        Returns:
+            Unique reference with prefix
+        """
+        return self.utils.generate_reference_with_prefix(prefix)
 
