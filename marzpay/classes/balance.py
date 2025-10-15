@@ -42,3 +42,4 @@ class BalanceAPI:
         if params:
             return self.marzpay.request('/balance/history', data=params)
         return self.marzpay.request('/balance/history')
+

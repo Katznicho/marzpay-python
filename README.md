@@ -4,13 +4,13 @@ Official Python SDK for MarzPay - Mobile Money Payment Platform for Uganda.
 
 ## Features
 
-- 🚀 **Complete API Coverage** - Collections, Disbursements, Accounts, Balance, Transactions, Services, Webhooks, and Phone Verification
-- 🔧 **Error Handling** - Comprehensive error handling with custom exception classes
-- 📱 **Phone Number Utilities** - Built-in phone number validation and formatting
-- 🔗 **Webhook Support** - Easy webhook handling and validation
-- 🧪 **Testing** - Full test coverage with pytest
-- 📚 **Documentation** - Comprehensive documentation and examples
-- ⚡ **Async Support** - Built-in async/await support for high-performance applications
+- **Complete API Coverage** - Collections, Disbursements, Accounts, Balance, Transactions, Services, Webhooks, and Phone Verification
+- **Error Handling** - Comprehensive error handling with custom exception classes
+- **Phone Number Utilities** - Built-in phone number validation and formatting
+- **Webhook Support** - Easy webhook handling and validation
+- **Testing** - Full test coverage with pytest
+- **Documentation** - Comprehensive documentation and examples
+- **Professional Grade** - Production-ready SDK with comprehensive error handling
 
 ## Installation
 
@@ -42,40 +42,31 @@ client = MarzPay(
 )
 
 # Collect money from customer
-result = client.collections.collect_money(
-    amount=5000,
-    phone_number="0759983853",
-    reference=client.collections.generate_reference(),
-    description="Payment for services"
-)
+result = client.collections.collect_money({
+    "phone_number": "256759983853",
+    "amount": 5000,
+    "description": "Payment for services"
+})
 
 print(f"Collection ID: {result['data']['collection_id']}")
 ```
 
-### Async Usage
+### Phone Verification
 
 ```python
-import asyncio
 from marzpay import MarzPay
 
-async def main():
-    client = MarzPay(
-        api_key="your_api_key",
-        api_secret="your_api_secret"
-    )
-    
-    # Collect money from customer
-    result = await client.collections.collect_money_async(
-        amount=5000,
-        phone_number="0759983853",
-        reference=client.collections.generate_reference(),
-        description="Payment for services"
-    )
-    
-    print(f"Collection ID: {result['data']['collection_id']}")
+client = MarzPay(
+    api_key="your_api_key",
+    api_secret="your_api_secret"
+)
 
-# Run the async function
-asyncio.run(main())
+# Verify phone number
+result = client.phone_verification.verify_phone_number("256759983853")
+
+if result["success"]:
+    print(f"User: {result['data']['full_name']}")
+    print(f"Phone: {result['data']['phone_number']}")
 ```
 
 ## API Reference
@@ -84,15 +75,14 @@ asyncio.run(main())
 
 ```python
 # Collect money
-result = client.collections.collect_money(
-    amount=10000,
-    phone_number="0759983853",
-    reference="unique-reference-id",
-    description="Payment for services"
-)
+result = client.collections.collect_money({
+    "phone_number": "256759983853",
+    "amount": 10000,
+    "description": "Payment for services"
+})
 
 # Get collection details
-collection = client.collections.get_collection("collection-id")
+collection = client.collections.get_collection_details("collection-uuid")
 
 # Get available services
 services = client.collections.get_services()
@@ -109,27 +99,37 @@ collections = client.collections.get_collections(
 
 ```python
 # Send money
-result = client.disbursements.send_money(
-    amount=5000,
-    phone_number="0759983853",
-    reference="unique-reference-id",
-    description="Refund payment"
-)
+result = client.disbursements.send_money({
+    "phone_number": "256759983853",
+    "amount": 5000,
+    "description": "Refund payment"
+})
 
 # Get disbursement details
-disbursement = client.disbursements.get_disbursement("disbursement-id")
+disbursement = client.disbursements.get_send_money_details("disbursement-uuid")
+```
+
+### Phone Verification API
+
+```python
+# Verify phone number
+result = client.phone_verification.verify_phone_number("256759983853")
+
+# Get service information
+service_info = client.phone_verification.get_service_info()
+
+# Check subscription status
+subscription = client.phone_verification.get_subscription_status()
 ```
 
 ### Webhooks
 
 ```python
-# Handle webhook
-webhook = client.webhooks.handle_webhook(request_body)
+# Handle webhook callback
+result = client.callback_handler.handle_callback(webhook_data)
 
-if webhook.is_valid():
-    # Process the webhook
-    transaction_id = webhook.get_transaction_id()
-    status = webhook.get_status()
+# Verify webhook signature
+is_valid = client.callback_handler.verify_signature(payload, signature, secret)
 ```
 
 ## Configuration
@@ -205,9 +205,13 @@ mypy marzpay
 
 MIT License. See [LICENSE](LICENSE) for details.
 
+## Official Documentation
+
+For complete API documentation, visit: [https://wallet.wearemarz.com/documentation](https://wallet.wearemarz.com/documentation)
+
 ## Support
 
-- Documentation: [https://docs.marzpay.com](https://docs.marzpay.com)
 - Issues: [https://github.com/Katznicho/marzpay-python/issues](https://github.com/Katznicho/marzpay-python/issues)
 - Email: dev@wearemarz.com
+
 

@@ -234,3 +234,4 @@ class WebhookPayload:
             'type' in self.data and
             'data' in self.data
         )
+

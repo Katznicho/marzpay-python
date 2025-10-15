@@ -41,7 +41,7 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "requests>=2.25.0",
-    "uuid>=1.30",
+    "urllib3>=1.26.0",
 ]
 
 [project.optional-dependencies]
@@ -59,7 +59,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/Katznicho/marzpay-python"
-Documentation = "https://docs.marzpay.com"
+Documentation = "https://wallet.wearemarz.com/documentation"
 Repository = "https://github.com/Katznicho/marzpay-python"
 "Bug Tracker" = "https://github.com/Katznicho/marzpay-python/issues"
 
@@ -82,4 +82,5 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
 

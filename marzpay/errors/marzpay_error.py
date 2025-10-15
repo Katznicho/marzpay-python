@@ -189,3 +189,4 @@ class MarzPayError(Exception):
         """Representation of the error"""
         return f"MarzPayError(message='{self.message}', code='{self.code}', status={self.status})"
 
+

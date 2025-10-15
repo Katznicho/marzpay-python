@@ -148,3 +148,4 @@ Thumbs.db
 .env.testing
 test_credentials.py
 *.log
+
