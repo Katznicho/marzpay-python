@@ -7,7 +7,7 @@ name = "marzpay-python"
 version = "1.0.0"
 description = "Official Python SDK for MarzPay - Mobile Money Payment Platform for Uganda"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "MarzPay Team", email = "dev@wearemarz.com"}
 ]
