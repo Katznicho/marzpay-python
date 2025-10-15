@@ -194,3 +194,6 @@ test-*.py
 .env
 .env.local
 .env.*.local
+
+# PyPI credentials
+.pypirc
